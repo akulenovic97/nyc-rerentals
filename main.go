@@ -3,25 +3,21 @@ package main
 import (
 	"fmt"
 	"log"
-	"github.com/gocolly/colly/v2"
+	"github.com/akulenovic97/nyc-rerentals/scrapers/resideny"
 )
 
 func main() {
 	fmt.Println("NYC re-rentals scraper")
 
-	c := colly.NewCollector()
+	scraper := resideny.New()
+	listings, err := scraper.Scrape()
 
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Now visiting ", r.URL)
-	})
-	c.OnHTML(".rh_page__listing article h3 a", func(e *colly.HTMLElement) {
-		name := e.Text
-		link := e.Attr("href")
-		fmt.Println("Property: ", name)
-		fmt.Println("Link: ", link)
-	})
-	c.OnError(func(r *colly.Response, err error) {
-		log.Println("Request failed: ", err)
-	})
-	c.Visit("https://residenewyork.com/my-properties/?status=open-to-applications")
+	if err != nil {
+		log.Fatal("Error scraping: ", err)
+	}
+
+	for i, listing := range listings {
+		fmt.Printf("%d. %s\n    %s\n\n", i + 1, listing.Name, listing.Link)
+	}
+	fmt.Printf("Total listings found: %d\n", len(listings))
 }
